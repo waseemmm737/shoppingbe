@@ -1,0 +1,26 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "start": "nodemon server.js"
+  },
+  "nodemonConfig": {
+      "ignore": ["Products/*"]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
+    "expo-server-sdk": "^3.4.0",
+    "express": "^4.16.4",
+    "firebase-admin": "^8.10.0",
+    "ip": "^1.1.5",
+    "mongoose": "^5.4.0",
+    "os": "^0.1.1"
+  }
+}
