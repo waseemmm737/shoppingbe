@@ -1,71 +1,61 @@
-const express = require("express");
-const app = express();
-const bodyParser = require("body-parser");
-const fs = require("fs");
-const cors = require("cors");
-const Routes = express.Router();
-const PORT = 5000;
-var Validator = require("jsonschema").Validator;
-var v = new Validator();
+var express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const appRoute = express.Router();
+const Product = require('./Products/product');
+var app = express();
 app.use(cors());
 app.use(bodyParser.json());
+appRoute.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+mongoose.connect(process.env.mongooseURI,
+    { useNewUrlParser: true, useUnifiedTopology: true });
+const connection = mongoose.connection;
+connection.once('open', function () {
+    console.log("MongoDB database connection established successfully");
+})
 
-Routes.route("/addProduct").post(function (req, res) {
-  let reqs = req.body;
-  let ress = v.validate(
-    reqs,
-    {
-      $schema: "http://json-schema.org/draft-04/schema#",
-      id: "number",
-      name: "string",
-      desc: "string",
-      price: "number",
-      pic: "string",
-      required: ["name", "price"],
-    },
-    { required: true }
-  );
-  if (!ress.valid) {
-    console.log("invalid data")
-    res.status(400).json("Invalid Product");
-  } else {
-    console.log("Add new Product...", req.body);
-    fs.readFile(
-      "Products/products.json",
-      "utf8",
-      function readFileCallback(err, data) {
-        if (err) {
-          res.status(400).json(err.message);
-        } else {
-          obj = JSON.parse(data); //now it an object
-          obj.products.push(reqs); //add some data
-          json = JSON.stringify(obj); //convert it back to json
-          fs.writeFile("Products/products.json", json, "utf8", () =>
-            res.status(200).json("Product added successfully")
-          ); // write it back
-        }
-      }
-    );
-  }
+app.route('/').get(function (req, res) {
+    res.json('Express server working');
 });
 
-Routes.route("/getProducts").get(function (req, res) {
-  fs.readFile(
-    "Products/products.json",
-    "utf8",
-    function readFileCallback(err, data) {
-      if (err) {
-        res.status(400).send(err);
-      } else {
-        obj = JSON.parse(data); //now it an object
-        res.json(obj.products);
-      }
-    }
-  );
+app.route('/addProduct').post(function (req, res) {
+    let reqs = req.body;
+    let product = new Product(reqs);
+    product.save()
+        .then(product => {
+            res.status(200).json(product);
+        })
+        .catch(err => {
+            res.status(400).send(err);
+        });
 });
 
-app.use("/prohub", Routes);
-
-app.listen(PORT, () => {
-  console.log("server is running at Port " + PORT);
+app.route('/getProducts').get(function (req, res) {
+    Product.find({}, function (err, products) {
+        if (!err)
+            res.status(200).json(products);
+        else
+            res.status(400).json(err);
+    });
 });
+
+app.route('/updateTodo/:product_id').post(function (req, res) {
+    Product.findOneAndUpdate({ _id: req.params.product_id }, { $set: req.body })
+        .then(_ => res.status(200).json("Update sucessfull"))
+        .catch(err => res.status(400).send(err))
+});
+
+app.route('/deleteTodo/:product_id').delete(function (req, res) {
+    Product.remove({ _id: req.params.product_id })
+        .then(_ => res.status(200).json("Delete sucessfull"))
+        .catch(err => res.status(400).send(err))
+});
+
+app.listen(process.env.PORT || 5000)
+exports = module.exports = app;
