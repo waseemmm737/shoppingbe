@@ -45,13 +45,13 @@ app.route('/getProducts').get(function (req, res) {
     });
 });
 
-app.route('/updateTodo/:product_id').post(function (req, res) {
+app.route('/updateProduct/:product_id').post(function (req, res) {
     Product.findOneAndUpdate({ _id: req.params.product_id }, { $set: req.body })
         .then(_ => res.status(200).json("Update sucessfull"))
         .catch(err => res.status(400).send(err))
 });
 
-app.route('/deleteTodo/:product_id').delete(function (req, res) {
+app.route('/deleteProduct/:product_id').delete(function (req, res) {
     Product.remove({ _id: req.params.product_id })
         .then(_ => res.status(200).json("Delete sucessfull"))
         .catch(err => res.status(400).send(err))
